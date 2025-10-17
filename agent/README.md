@@ -1,36 +1,38 @@
-# Trust API Agentic Flow
+# Email Security Agent (Pydantic AI + MCP)
 
-A simple Python agent that uses the Trust API MCP server to make intelligent fraud detection decisions based on email and IP addresses.
+An intelligent Python agent that uses Pydantic AI with the Trust API MCP server to analyze email security threats and detect phishing, spoofing, and suspicious activity.
 
 ## How It Works
 
-The agent follows this flow:
+The agent follows this autonomous flow:
 
 ```
-User Input (email + IP)
+Email Metadata Input
          ↓
-  [Trust Agent]
+  [Pydantic AI Agent]
          ↓
-  Connect to MCP Server ← [Trust API MCP Server]
+  Auto-discover MCP tools ← [Trust API MCP Server]
          ↓
-  Call score_transaction tool
+  Autonomously call score_transaction (action: email_security)
          ↓
-  Receive trust score + signals
+  Analyze trust scores + email authentication
          ↓
-  Apply business logic
+  Apply email security logic
          ↓
-  Make decision: APPROVE/REVIEW/DECLINE
+  Make decision: SAFE/SUSPICIOUS/BLOCK
          ↓
-  Return decision + reasoning
+  Return structured decision + reasoning
 ```
 
 ## Features
 
-- **Intelligent Decision Making**: Uses trust scores and risk signals to make informed decisions
-- **Risk Level Classification**: Categorizes transactions into very_low, low, medium, high, very_high risk
-- **Confidence Scoring**: Provides confidence level for each decision
-- **Risk Factor Analysis**: Identifies specific risk signals (disposable email, VPN, TOR, etc.)
-- **Actionable Recommendations**: Suggests next steps for each decision
+- **Autonomous Tool Discovery**: Agent automatically discovers and uses MCP tools
+- **Email Security Analysis**: Analyzes sender/recipient trust, email authentication (DKIM/SPF/DMARC)
+- **Phishing Detection**: Identifies domain spoofing, authentication failures, and mismatches
+- **Risk Classification**: Categorizes emails into very_low, low, medium, high, very_high risk
+- **Confidence Scoring**: Provides confidence level (0-1) for each decision
+- **Risk Factor Analysis**: Identifies specific threats (disposable email, VPN, TOR, malicious IPs)
+- **Actionable Recommendations**: Suggests next steps (deliver, quarantine, block)
 
 ## Installation
 
@@ -45,151 +47,193 @@ npm run build
 cd ../agent
 ```
 
+## Environment Setup
+
+Create a `.env` file in the `agent/` directory:
+
+```bash
+# Required: OpenAI API key for Pydantic AI
+OPENAI_API_KEY=sk-...
+
+# Required: Trust API key (also set in ../server/.env)
+TRUST_API_KEY=your_trust_api_key_here
+```
+
+Get your Trust API key from: https://app.elephant.online/organization/keys
+
 ## Usage
 
 ### Basic Usage
 
 ```python
-from trust_agent import TrustAgent
+from email_security_agent import EmailAnalysisRequest, analyze_email_security, email_security_agent
 
-async def check_user():
-    agent = TrustAgent()
-
-    try:
-        await agent.connect()
-
-        decision = await agent.make_decision(
-            email="user@example.com",
-            ip="8.8.8.8",
-            action_type="signup"
+async def check_email():
+    async with email_security_agent:
+        request = EmailAnalysisRequest(
+            sender_email="user@example.com",
+            sender_name="John Doe",
+            sender_ip="8.8.8.8",
+            recipient_email="support@company.com",
+            recipient_name="Support Team",
+            arc_authentication_results="mx.google.com; dkim=pass; spf=pass; dmarc=pass",
+            dkim_signature="v=1; a=rsa-sha256; d=example.com; s=google;",
+            message_id_domain="example.com",
         )
 
-        agent.print_decision(decision)
-    finally:
-        await agent.disconnect()
+        decision = await analyze_email_security(request)
+        print(f"Decision: {decision.decision}")
+        print(f"Risk: {decision.risk_level}")
+        print(f"Reasoning: {decision.reasoning}")
 ```
 
 ### Run Examples
 
 ```bash
-# Make sure TRUST_API_KEY is set in ../server/.env
-python trust_agent.py
+# Make sure OPENAI_API_KEY and TRUST_API_KEY are set
+python email_security_agent.py
 ```
 
 ## Decision Logic
 
-The agent uses the following rules:
+The agent uses the following security rules:
 
-| Score Range | Decision | Risk Level | Confidence | Action |
-|------------|----------|------------|------------|---------|
-| 800-1000 | APPROVE | very_low | 95% | Auto-approve |
-| 600-799 | APPROVE | low | 85% | Approve with monitoring |
-| 400-599 | REVIEW | medium | 70% | Manual review + additional verification |
-| 200-399 | DECLINE | high | 80% | Likely decline unless verified |
-| 0-199 | DECLINE | very_high | 95% | Auto-decline |
+| Score Range | Decision | Risk Level | Action |
+|------------|----------|------------|---------|
+| 800-1000 | SAFE | very_low | Deliver to inbox |
+| 600-799 | SAFE | low | Deliver with monitoring |
+| 400-599 | SUSPICIOUS | medium | Flag for review or quarantine |
+| 200-399 | BLOCK | high | Likely phishing/spam - block |
+| 0-199 | BLOCK | very_high | Block immediately |
 
-### Risk Factor Escalation
+### Email Security Risk Factors
 
-Even high scores can be escalated to REVIEW if critical risk factors are detected:
-- Disposable email domains
-- Proxy/VPN usage
-- TOR network
-- Bot/automated traffic
+Critical factors that can trigger BLOCK or SUSPICIOUS:
+
+- **Email Authentication Failures**: DKIM, SPF, or DMARC failures
+- **Domain Mismatches**: Sender domain ≠ Message-ID domain
+- **Disposable Emails**: Temporary/disposable email domains
+- **Network Risks**: VPN/Proxy/TOR usage from sender IP
+- **New Accounts**: Brand new email accounts (0 days old)
+- **Malicious IPs**: Known bad IP addresses
+- **Domain Reputation**: Poor sender domain reputation
+- **Suspicious Patterns**: Anomalous sender/recipient behavior
 
 ## Example Output
 
 ```
-╔══════════════════════════════════════════════════════════╗
-║           Trust API Agentic Flow Demo                   ║
-║   Using MCP to make intelligent fraud decisions         ║
-╚══════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║      Email Security Agent (Pydantic AI + MCP - PROPER)          ║
+║          Agent autonomously discovers and uses MCP tools         ║
+╚══════════════════════════════════════════════════════════════════╝
 
-🔌 Connecting to Trust API MCP server...
-✅ Connected to Trust API MCP server
+🔍 Agent is discovering available MCP tools...
+✅ Agent ready! It will autonomously decide which tools to use.
 
-📋 Available tools: 6
-  - score_transaction: Score a transaction or user action for trust/fraud risk...
-  - send_feedback: Send feedback about transaction outcomes...
+======================================================================
+EXAMPLE 1: Analyzing Legitimate Email (Gmail to Corporate)
+======================================================================
 
-============================================================
-EXAMPLE 1: Legitimate User
-============================================================
+======================================================================
+✅ EMAIL SECURITY ANALYSIS (Autonomous Agent)
+======================================================================
 
-🔍 Analyzing transaction...
-  Email: john.doe@gmail.com
-  IP: 8.8.8.8
-  Action: signup
+📧 Sender: yuri1992@gmail.com (Yuri Ritvin)
+🌐 Sender IP: 8.8.8.8
+
+📧 Recipient: moshee@pipl.com (Moshe Elkayam)
+🌐 Recipient IP: 1.1.1.1
+
+🔐 Authentication: DKIM/SPF/DMARC all pass
 
 📊 Trust Score: 750/1000
-📋 API Decision: approve
 
-============================================================
-🤖 AGENT DECISION
-============================================================
+✅ Decision: SAFE
+🟡 Risk Level: LOW
+🎯 Confidence: 88%
 
-✅ Decision: APPROVE
-📊 Confidence: 85%
-⚠️  Risk Level: LOW
+💭 Reasoning:
+   Legitimate Gmail user with passing authentication. No suspicious patterns detected.
 
-💭 Reasoning: Good trust score, acceptable risk level
+💡 Recommendations:
+   1. Deliver to inbox
+   2. Monitor for unusual activity patterns
+   3. No additional action required
 
-💡 Recommendation: Monitor for unusual activity
-
-============================================================
+======================================================================
 ```
 
 ## Advanced Usage
 
-### Custom Business Rules
+### Custom Email Security Rules
 
-You can extend the `TrustAgent` class to implement custom business rules:
+You can extend the agent's behavior by modifying the system prompt:
 
 ```python
-class CustomTrustAgent(TrustAgent):
-    async def make_decision(self, email, ip, action_type="signup"):
-        # Get base decision
-        decision = await super().make_decision(email, ip, action_type)
+from pydantic_ai import Agent
 
-        # Apply custom rules
-        if email.endswith("@trusted-domain.com"):
-            decision["decision"] = "APPROVE"
-            decision["reason"] += " (trusted domain override)"
+custom_agent = Agent(
+    model="openai:gpt-4o",
+    output_type=EmailSecurityDecision,
+    system_prompt="""Your custom email security rules here...
 
-        return decision
+    Additional requirements:
+    - Block all emails from @tempmail.com
+    - Require MFA for high-value recipients
+    - etc.
+    """,
+    toolsets=[trust_api_server],
+)
 ```
 
-### Batch Processing
+### Batch Email Analysis
 
 ```python
-async def process_batch(users):
-    agent = TrustAgent()
-    await agent.connect()
-
-    try:
+async def analyze_email_batch(emails: list[EmailAnalysisRequest]):
+    async with email_security_agent:
         results = []
-        for user in users:
-            decision = await agent.make_decision(
-                email=user["email"],
-                ip=user["ip"]
-            )
-            results.append(decision)
+        for email in emails:
+            decision = await analyze_email_security(email)
+            results.append({
+                "email": email.sender_email,
+                "decision": decision.decision,
+                "risk": decision.risk_level,
+            })
         return results
-    finally:
-        await agent.disconnect()
 ```
 
 ## Architecture
 
-- **TrustAgent**: Main agent class that orchestrates the decision-making flow
-- **MCP Client**: Connects to the Trust API MCP server via stdio
-- **Decision Logic**: Business rules for approve/review/decline
-- **Signal Analysis**: Extracts and evaluates risk signals from API response
+- **EmailAnalysisRequest**: Input model with sender, recipient, and authentication metadata
+- **EmailSecurityDecision**: Structured output with decision, risk, confidence, and reasoning
+- **email_security_agent**: Pydantic AI agent that autonomously discovers and uses MCP tools
+- **trust_api_server**: MCP connection to Trust API server (stdio transport)
+- **analyze_email_security()**: Main function that runs the agent with email context
+
+## How the Agent Works
+
+1. **MCP Connection**: Agent connects to Trust API MCP server via stdio
+2. **Tool Discovery**: Agent automatically discovers available tools (`score_transaction`, etc.)
+3. **Autonomous Analysis**: Agent reads the email metadata and decides which tools to call
+4. **Trust Scoring**: Calls `score_transaction` with `action_type="email_security"`
+5. **Authentication Check**: Analyzes DKIM/SPF/DMARC headers and domain matches
+6. **Risk Assessment**: Combines trust scores with email-specific risk factors
+7. **Decision Making**: Returns structured decision with reasoning and recommendations
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - Node.js 18+ (for MCP server)
+- OpenAI API key (for Pydantic AI)
 - Trust API key (set in `../server/.env`)
+
+## Dependencies
+
+- `pydantic-ai>=0.0.14` - AI agent framework with structured outputs
+- `pydantic>=2.0.0` - Data validation
+- `openai>=1.0.0` - OpenAI API client
+- `mcp>=1.0.0` - Model Context Protocol
+- `python-dotenv>=1.0.0` - Environment variable management
 
 ## License
 
