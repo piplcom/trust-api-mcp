@@ -266,14 +266,14 @@ async def main():
         print("=" * 70)
 
         request3 = EmailAnalysisRequest(
-            sender_email="support@paypa1.com",  # Note the "1" instead of "l"
-            sender_name="PayPal Security Team",
-            sender_ip="45.123.45.67",  # Known malicious IP range
+            sender_email="admin@secure-banking.net",
+            sender_name="Security Department",
+            sender_ip="45.123.45.67",  # Suspicious IP range
             recipient_email="user@example.com",
-            recipient_name="Victim User",
+            recipient_name="Account Holder",
             arc_authentication_results="mx.suspicious.com; dkim=fail; spf=fail; dmarc=fail",
-            dkim_signature="v=1; a=rsa-sha256; d=paypa1.com; s=fake;",
-            message_id_domain="suspicious-server.ru",  # Domain mismatch!
+            dkim_signature="v=1; a=rsa-sha256; d=secure-banking.net; s=default;",
+            message_id_domain="mail-relay.xyz",  # Domain mismatch!
         )
         decision3 = await analyze_email_security(request3)
         print_decision(decision3, request3)
