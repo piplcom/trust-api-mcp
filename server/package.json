@@ -1,0 +1,52 @@
+{
+  "name": "trust-api-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Elephant Trust API - fraud detection and identity verification",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "trust-api-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "dotenv": "^16.3.1",
+    "mcp-framework": "^0.2.15",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "trust-api",
+    "fraud-detection",
+    "identity-verification",
+    "elephant",
+    "pipl"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/trust-api-mcp.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
